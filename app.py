@@ -13,7 +13,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-HF_API_URL = "https://huggingface.co/spaces/Nuruk/autosub-app/api/predict"
+HF_API_URL = "https://nuruk-autosub-app.hf.space/api/predict"
 
 @app.post("/transcribe")
 async def transcribe(
