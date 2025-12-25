@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 import requests
+import base64
 
 app = FastAPI()
 
@@ -12,32 +13,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-HF_API_URL = "https://nuruk-autosub-app.hf.space/run/predict"
+HF_API_URL = "https://huggingface.co/spaces/Nuruk/autosub-app/api/predict"
 
 @app.post("/transcribe")
 async def transcribe(
     video: UploadFile = File(...),
     language: str = Form("auto")
 ):
-    files = {
-        "data": (
-            video.filename,
-            await video.read(),
-            video.content_type
-        )
-    }
+    video_bytes = await video.read()
+    video_base64 = base64.b64encode(video_bytes).decode("utf-8")
 
     payload = {
-        "language": language,
-        "punctuation": "true",
-        "burn_subtitles": "false"
+        "data": [
+            {
+                "name": video.filename,
+                "data": video_base64
+            },
+            language,
+            True,
+            False,
+            ""
+        ]
     }
 
-    response = requests.post(
-        HF_API_URL,
-        files=files,
-        data=payload,
-        timeout=300
-    )
-
+    response = requests.post(HF_API_URL, json=payload, timeout=120)
     return response.json()
